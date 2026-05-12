@@ -21,8 +21,9 @@ Your ONLY job is to classify the student's message into one of these intents. Re
 Intents:
 1. "greeting" — Simple greetings, hello, thanks, goodbye, how are you, etc.
 2. "faq" — Questions about college info: admissions, fees, hostel, academics, LMS, exams, placements, dress code, timings, contacts, extracurricular, or any general knowledge question.
-3. "task" — Anything about the student's onboarding checklist, pending tasks, deadlines, what they need to do next, uploading documents, task status, or onboarding progress.
-4. "escalation" — Complaints, frustration, repeated failures, requests to talk to a human, unresolved issues, or anything the AI cannot handle.
+3. "task" — Anything about the student's onboarding checklist, pending tasks, deadlines, or what they need to do next.
+4. "document" — Queries specifically about uploaded documents, document verification status, rejected documents, or how to upload a document.
+5. "escalation" — Complaints, frustration, repeated failures, requests to talk to a human, unresolved issues, or anything the AI cannot handle.
 
 Respond with EXACTLY this JSON format (no markdown, no explanation):
 {"intent": "faq", "confidence": 0.95}
@@ -32,7 +33,8 @@ Examples:
 - "What documents do I need?" → {"intent": "faq", "confidence": 0.95}
 - "What is the fee structure?" → {"intent": "faq", "confidence": 0.95}
 - "What tasks do I have pending?" → {"intent": "task", "confidence": 0.95}
-- "I already uploaded my marksheet but it still shows pending" → {"intent": "task", "confidence": 0.85}
+- "Is my marksheet verified?" → {"intent": "document", "confidence": 0.95}
+- "Why was my document rejected?" → {"intent": "document", "confidence": 0.85}
 - "This is not working, I need help from a real person" → {"intent": "escalation", "confidence": 0.90}
 - "How do I access LMS?" → {"intent": "faq", "confidence": 0.95}
 - "What is my onboarding progress?" → {"intent": "task", "confidence": 0.95}"""
@@ -79,7 +81,7 @@ async def supervisor_node(state: AgentState) -> dict:
         confidence = float(result.get("confidence", 0.5))
 
         # Validate intent
-        valid_intents = {"greeting", "faq", "task", "escalation"}
+        valid_intents = {"greeting", "faq", "task", "document", "escalation"}
         if intent not in valid_intents:
             intent = "faq"
             confidence = 0.5

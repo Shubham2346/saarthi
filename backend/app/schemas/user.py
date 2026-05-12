@@ -5,7 +5,7 @@ User request/response schemas for API validation.
 import uuid
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from app.models.user import UserRole, OnboardingStage
 
 
@@ -13,7 +13,9 @@ from app.models.user import UserRole, OnboardingStage
 
 class GoogleAuthRequest(BaseModel):
     """Request body when frontend sends a Google OAuth token."""
-    token: str
+    token: str = Field(..., alias="id_token")
+
+    model_config = {"populate_by_name": True}
 
 
 class TokenResponse(BaseModel):

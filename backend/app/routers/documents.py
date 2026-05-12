@@ -7,7 +7,7 @@ import uuid
 import shutil
 from typing import List
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -17,6 +17,8 @@ from app.schemas.document import DocumentRead, DocumentVerify
 from app.middleware.auth import get_current_user, require_admin
 from app.models.user import User
 from app.models.document import Document, DocumentStatus
+from app.services.document_service import process_uploaded_document
+from app.database import async_session
 
 settings = get_settings()
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -33,6 +35,7 @@ ALLOWED_TYPES = {
 
 @router.post("/upload", response_model=DocumentRead, status_code=201)
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     task_id: str = Form(default=None),
     session: AsyncSession = Depends(get_session),
@@ -44,7 +47,7 @@ async def upload_document(
     - Validates file type and size.
     - Stores the file on disk.
     - Creates a database record with 'uploaded' status.
-    - In Phase 4, this will trigger the Document Verification Agent.
+    - Triggers the Document Verification Agent in the background.
     """
     # Validate file type
     if file.content_type not in ALLOWED_TYPES:
@@ -90,6 +93,13 @@ async def upload_document(
     )
     session.add(document)
     await session.flush()
+    
+    # Trigger background verification
+    async def run_verification(doc_id: uuid.UUID):
+        async with async_session() as bg_session:
+            await process_uploaded_document(bg_session, doc_id)
+            
+    background_tasks.add_task(run_verification, document.id)
 
     return DocumentRead.model_validate(document)
 

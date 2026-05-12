@@ -97,6 +97,20 @@ export default function Dashboard() {
                   <small>Check your onboarding checklist and deadlines</small>
                 </div>
               </a>
+              <a href="/documents" className={styles.actionBtn}>
+                <span>📄</span>
+                <div>
+                  <strong>Upload Documents</strong>
+                  <small>Submit verification documents</small>
+                </div>
+              </a>
+              <a href="/tickets" className={styles.actionBtn}>
+                <span>🎫</span>
+                <div>
+                  <strong>Support Tickets</strong>
+                  <small>Check status of your escalated queries</small>
+                </div>
+              </a>
             </div>
           </div>
 

@@ -81,10 +81,10 @@ async def verify_google_token(token: str) -> dict:
 
 async def get_or_create_user(
     session: AsyncSession, google_info: dict
-) -> User:
+) -> tuple[User, bool]:
     """
     Find an existing user by Google ID, or create a new one.
-    Returns the User ORM instance.
+    Returns a tuple of (User ORM instance, is_new_user).
     """
     google_id = google_info["sub"]
 
@@ -99,7 +99,7 @@ async def get_or_create_user(
             user.avatar_url = google_info["picture"]
             user.updated_at = datetime.utcnow()
             session.add(user)
-        return user
+        return user, False
 
     # Create new user
     user = User(
@@ -111,7 +111,7 @@ async def get_or_create_user(
     )
     session.add(user)
     await session.flush()
-    return user
+    return user, True
 
 
 async def get_user_by_id(

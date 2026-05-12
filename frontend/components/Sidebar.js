@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
   { href: '/chat', label: 'Ask Saarthi', icon: '💬' },
   { href: '/tasks', label: 'My Tasks', icon: '📋' },
+  { href: '/documents', label: 'Documents', icon: '📄' },
+  { href: '/tickets', label: 'Support Tickets', icon: '🎫' },
 ]
 
 const ADMIN_ITEMS = [

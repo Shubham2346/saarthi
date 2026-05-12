@@ -10,11 +10,11 @@ Graph Structure:
     │  Supervisor │  (classifies intent)
     └──────┬──────┘
            │
-     ┌─────┼─────┬──────────┐
-     │     │     │          │
-  greeting faq  task    escalation
-     │     │     │          │
-     └─────┼─────┴──────────┘
+     ┌─────┼─────┬─────┬─────┐
+     │     │     │     │     │
+  greeting faq  task  doc escalation
+     │     │     │     │     │
+     └─────┼─────┴─────┴─────┘
            │
     ┌──────▼──────┐
     │     END     │
@@ -31,6 +31,7 @@ from app.agents.state import AgentState
 from app.agents.supervisor import supervisor_node
 from app.agents.faq_agent import faq_node
 from app.agents.task_agent import task_node
+from app.agents.document_agent import document_node
 from app.agents.escalation_agent import escalation_node
 from app.agents.greeting_handler import greeting_node
 
@@ -52,6 +53,7 @@ def _route_by_intent(state: AgentState) -> str:
         "greeting": "greeting",
         "faq": "faq",
         "task": "task",
+        "document": "document",
         "escalation": "escalation",
     }
 
@@ -71,6 +73,7 @@ def create_agent_graph() -> StateGraph:
     graph.add_node("greeting", greeting_node)
     graph.add_node("faq", faq_node)
     graph.add_node("task", task_node)
+    graph.add_node("document", document_node)
     graph.add_node("escalation", escalation_node)
 
     # --- Add Edges ---
@@ -86,6 +89,7 @@ def create_agent_graph() -> StateGraph:
             "greeting": "greeting",
             "faq": "faq",
             "task": "task",
+            "document": "document",
             "escalation": "escalation",
         },
     )
@@ -94,6 +98,7 @@ def create_agent_graph() -> StateGraph:
     graph.add_edge("greeting", END)
     graph.add_edge("faq", END)
     graph.add_edge("task", END)
+    graph.add_edge("document", END)
     graph.add_edge("escalation", END)
 
     # Compile the graph

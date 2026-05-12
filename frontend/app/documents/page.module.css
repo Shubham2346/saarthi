@@ -1,0 +1,117 @@
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.uploadCard {
+  background: var(--bg-card);
+  padding: 32px;
+}
+
+.uploadCard h2 {
+  font-size: 20px;
+  margin-bottom: 24px;
+}
+
+.uploadForm {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.fileInput input {
+  padding: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.docList h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.docCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+.docInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.docIcon {
+  font-size: 32px;
+}
+
+.docInfo h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.docInfo p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.docStatus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.rejectionReason {
+  font-size: 12px;
+  color: var(--error);
+  max-width: 250px;
+  text-align: right;
+}
+
+.emptyState {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+}

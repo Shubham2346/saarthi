@@ -63,9 +63,9 @@ export const chat = {
 }
 
 export const tasks = {
-  list: () => api.get('/tasks/me'),
-  update: (taskId, data) => api.patch(`/tasks/me/${taskId}`, data),
-  progress: () => api.get('/tasks/me/progress'),
+  list: () => api.get('/tasks/my-tasks'),
+  update: (taskId, data) => api.patch(`/tasks/my-tasks/${taskId}`, data),
+  progress: () => api.get('/tasks/my-progress'),
 }
 
 export const knowledge = {
@@ -80,4 +80,27 @@ export const knowledge = {
 export const users = {
   me: () => api.get('/users/me'),
   update: (data) => api.patch('/users/me', data),
+}
+
+export const documents = {
+  listMy: () => api.get('/documents/my-documents'),
+  upload: async (file, taskId = null) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (taskId) formData.append('task_id', taskId)
+    
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const res = await fetch(`${API_BASE}/documents/upload`, {
+      method: 'POST',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+      body: formData
+    })
+    
+    if (!res.ok) throw new Error('Upload failed')
+    return res.json()
+  }
+}
+
+export const tickets = {
+  listMy: () => api.get('/tickets/my-tickets'),
 }

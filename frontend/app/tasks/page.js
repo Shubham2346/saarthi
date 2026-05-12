@@ -113,7 +113,13 @@ export default function TasksPage() {
                   <p className={styles.taskDesc}>{task.description}</p>
                   <div className={styles.taskMeta}>
                     {task.is_mandatory && <span className={styles.mandatory}>Required</span>}
-                    {task.requires_document && <span className={styles.docTag}>📎 Document</span>}
+                    {task.requires_document && (
+                      <span className={styles.docTag}>
+                        📎 {ut.status !== 'completed' ? (
+                          <a href="/documents" style={{ color: 'inherit', textDecoration: 'underline' }}>Upload Document</a>
+                        ) : 'Document'}
+                      </span>
+                    )}
                     {task.deadline && (
                       <span className={styles.deadline}>
                         Due: {new Date(task.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}

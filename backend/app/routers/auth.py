@@ -37,12 +37,7 @@ async def google_login(
     google_info = await verify_google_token(request.token)
 
     # Get or create user
-    is_new = False
-    user = await get_or_create_user(session, google_info)
-
-    # Check if this is a brand new user (just created)
-    if not user.created_at or (user.updated_at == user.created_at):
-        is_new = True
+    user, is_new = await get_or_create_user(session, google_info)
 
     # Assign onboarding tasks to new students
     if is_new:
