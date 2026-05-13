@@ -20,7 +20,7 @@ This is a robust asynchronous Python backend built with FastAPI, integrating sta
 ### AI & Agents (RAG & NLP)
 - **[LangChain](https://python.langchain.com/) / LangGraph**: Framework for developing applications powered by language models and creating complex multi-agent workflows.
 - **[ChromaDB](https://www.trychroma.com/)**: Open-source embedding database for managing vector storage for RAG implementations.
-- **[Ollama](https://ollama.com/)**: Local LLM execution engine running models like `gemma4:e2b` for chat and reasoning, and `llama3.2-vision` for visual tasks.
+- **[Ollama](https://ollama.com/)**: Local LLM execution engine running models like `qwen3.5:4b` for chat and reasoning, and `llama3.2-vision` for visual tasks.
 - **Tiktoken**: Tokenizer integration.
 
 ### Document Processing & OCR
@@ -98,7 +98,7 @@ JWT_ALGORITHM="HS256"
 
 # Ollama & Chroma Config
 OLLAMA_BASE_URL="http://localhost:11434"
-OLLAMA_MODEL="gemma4:e2b"
+OLLAMA_MODEL="qwen3.5:4b"
 OLLAMA_VISION_MODEL="llama3.2-vision"
 CHROMA_PERSIST_DIR="./chroma_data"
 ```
