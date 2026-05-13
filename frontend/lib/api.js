@@ -50,7 +50,7 @@ export const api = {
 
 // specific API calls
 export const auth = {
-  googleLogin: (idToken) => api.post('/auth/google', { id_token: idToken }),
+  googleLogin: (idToken) => api.post('/auth/google', { token: idToken }),
   me: () => api.get('/auth/me'),
 }
 

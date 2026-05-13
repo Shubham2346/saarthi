@@ -35,8 +35,8 @@ class Settings(BaseSettings):
 
     # --- Ollama (Phase 2+) ---
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3:8b"
-    OLLAMA_VISION_MODEL: str = "llama3.2-vision"
+    OLLAMA_MODEL: str = "gemma4:e2b"
+    OLLAMA_VISION_MODEL: str = "gemma4:e2b"
 
     # --- Vector DB (Phase 2+) ---
     CHROMA_PERSIST_DIR: str = "./chroma_data"

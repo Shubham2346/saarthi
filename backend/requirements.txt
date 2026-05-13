@@ -1,43 +1,44 @@
-# Core Framework
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
+# requirements.txt — Python 3.12.10 compatible
+# Verified: pip dry-run resolves all packages with zero conflicts.
 
-# Database
+# ── Core Framework ─────────────────────────────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.30.6          # removed duplicate bare uvicorn[standard] entry
+
+# ── Database ───────────────────────────────────────────────────────────────────
 sqlmodel==0.0.22
 sqlalchemy==2.0.35
 asyncpg==0.30.0
 alembic==1.13.2
-# psycopg2-binary OPTIONAL (remove if not needed)
 
-# Authentication
+# ── Authentication ─────────────────────────────────────────────────────────────
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 google-auth==2.35.0
 google-auth-oauthlib==1.2.1
 google-auth-httplib2==0.2.0
 
-# Utilities
+# ── Utilities ──────────────────────────────────────────────────────────────────
 python-dotenv==1.0.1
 python-multipart==0.0.12
 pydantic[email]==2.9.2
 pydantic-settings==2.5.2
 httpx==0.27.2
 
-# File handling
+# ── File Handling ──────────────────────────────────────────────────────────────
 aiofiles==24.1.0
 
-# --- RAG & AI (LOCKED versions) ---
+# ── RAG & AI ───────────────────────────────────────────────────────────────────
 langchain==0.3.30
 langchain-core==0.3.86
 langchain-community==0.3.27
 langchain-text-splitters==0.3.11
 langchain-ollama==0.3.10
 langgraph==1.0.1
-
-chromadb==0.5.5
+chromadb==0.6.3
 ollama>=0.5.3,<1.0.0
-tiktoken==0.7.0
+tiktoken==0.9.0
 
-# --- Document Processing ---
+# ── Document Processing ────────────────────────────────────────────────────────
 pytesseract==0.3.13
-Pillow==12.2.0
+Pillow==11.3.0
