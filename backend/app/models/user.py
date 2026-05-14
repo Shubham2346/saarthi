@@ -13,12 +13,15 @@ if TYPE_CHECKING:
     from app.models.task import UserTask
     from app.models.document import Document
     from app.models.ticket import SupportTicket
+    from app.models.fee import FeeRecord
+    from app.models.hostel import HostelAllocation
 
 
 class UserRole(str, enum.Enum):
     STUDENT = "student"
     ADMIN = "admin"
     MENTOR = "mentor"
+    SYSTEM_ADMIN = "system_admin"
 
 
 class OnboardingStage(str, enum.Enum):
@@ -50,6 +53,12 @@ class User(SQLModel, table=True):
     )
     phone: Optional[str] = Field(default=None, max_length=20)
     admission_id: Optional[str] = Field(default=None, max_length=50, index=True)
+    department: Optional[str] = Field(default=None, max_length=100)
+    program: Optional[str] = Field(default=None, max_length=100)
+    batch: Optional[str] = Field(default=None, max_length=20)
+
+    # Mentor Mapping
+    mentor_id: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id", index=True)
 
     # Onboarding Progress
     stage: OnboardingStage = Field(
@@ -78,3 +87,17 @@ class User(SQLModel, table=True):
         back_populates="user",
         sa_relationship_kwargs={"foreign_keys": "[SupportTicket.user_id]"},
     )
+    
+    # Self-referential mentor relationship
+    mentor: Optional["User"] = Relationship(
+        back_populates="assigned_students",
+        sa_relationship_kwargs={"remote_side": "[User.id]"}
+    )
+    assigned_students: List["User"] = Relationship(
+        back_populates="mentor",
+        sa_relationship_kwargs={"foreign_keys": "[User.mentor_id]"}
+    )
+    
+    # Future relationships defined later
+    fee_records: List["FeeRecord"] = Relationship(back_populates="user")
+    hostel_allocation: Optional["HostelAllocation"] = Relationship(back_populates="user")

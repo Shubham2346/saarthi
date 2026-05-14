@@ -23,7 +23,8 @@ Intents:
 2. "faq" — Questions about college info: admissions, fees, hostel, academics, LMS, exams, placements, dress code, timings, contacts, extracurricular, or any general knowledge question.
 3. "task" — Anything about the student's onboarding checklist, pending tasks, deadlines, or what they need to do next.
 4. "document" — Queries specifically about uploaded documents, document verification status, rejected documents, or how to upload a document.
-5. "escalation" — Complaints, frustration, repeated failures, requests to talk to a human, unresolved issues, or anything the AI cannot handle.
+5. "workflow" — Requests to perform an action or automate a process, such as "assign me a mentor" or "apply for hostel".
+6. "escalation" — Complaints, frustration, repeated failures, requests to talk to a human, unresolved issues, or anything the AI cannot handle.
 
 Respond with EXACTLY this JSON format (no markdown, no explanation):
 {"intent": "faq", "confidence": 0.95}
@@ -35,6 +36,8 @@ Examples:
 - "What tasks do I have pending?" → {"intent": "task", "confidence": 0.95}
 - "Is my marksheet verified?" → {"intent": "document", "confidence": 0.95}
 - "Why was my document rejected?" → {"intent": "document", "confidence": 0.85}
+- "Please assign me a mentor" → {"intent": "workflow", "confidence": 0.95}
+- "I want to apply for a hostel room" → {"intent": "workflow", "confidence": 0.95}
 - "This is not working, I need help from a real person" → {"intent": "escalation", "confidence": 0.90}
 - "How do I access LMS?" → {"intent": "faq", "confidence": 0.95}
 - "What is my onboarding progress?" → {"intent": "task", "confidence": 0.95}"""
@@ -46,6 +49,31 @@ async def supervisor_node(state: AgentState) -> dict:
     Returns updated state fields: intent, confidence, messages.
     """
     user_message = state["user_message"]
+    user_msg_lower = user_message.lower()
+
+    # --- Pre-filter overrides for extreme reliability ---
+    # If the user explicitly asks for a mentor or hostel, bypass LLM guessing
+    if "assign" in user_msg_lower and ("mentor" in user_msg_lower or "guide" in user_msg_lower):
+        return {
+            "intent": "workflow",
+            "confidence": 1.0,
+            "messages": [{
+                "role": "system",
+                "content": "Supervisor used keyword override to classify intent as 'workflow' (mentor assignment).",
+                "agent": "supervisor"
+            }]
+        }
+        
+    if "apply" in user_msg_lower and ("hostel" in user_msg_lower or "room" in user_msg_lower):
+        return {
+            "intent": "workflow",
+            "confidence": 1.0,
+            "messages": [{
+                "role": "system",
+                "content": "Supervisor used keyword override to classify intent as 'workflow' (hostel application).",
+                "agent": "supervisor"
+            }]
+        }
 
     try:
         raw_response = await ollama_service.generate(
@@ -81,7 +109,7 @@ async def supervisor_node(state: AgentState) -> dict:
         confidence = float(result.get("confidence", 0.5))
 
         # Validate intent
-        valid_intents = {"greeting", "faq", "task", "document", "escalation"}
+        valid_intents = {"greeting", "faq", "task", "document", "workflow", "escalation"}
         if intent not in valid_intents:
             intent = "faq"
             confidence = 0.5

@@ -104,3 +104,12 @@ export const documents = {
 export const tickets = {
   listMy: () => api.get('/tickets/my-tickets'),
 }
+
+export const analytics = {
+  dashboard: () => api.get('/analytics/dashboard'),
+}
+
+export const mentors = {
+  getStudents: () => api.get('/mentors/students'),
+  assignStudent: (mentorId, studentId) => api.patch(`/mentors/${mentorId}/assign/${studentId}`),
+}

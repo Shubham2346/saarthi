@@ -7,7 +7,7 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import styles from './page.module.css'
 
 // Using the backend client ID as configured in .env
-const GOOGLE_CLIENT_ID = "112362004896-10s5a7ch3cicu228et3bumk6uelt9o13.apps.googleusercontent.com"
+const GOOGLE_CLIENT_ID = "1092970477426-u9oe8so5qvh7mhqddvcpk419jb2l1dtu.apps.googleusercontent.com"
 
 export default function LoginPage() {
   const { user, login } = useAuth()

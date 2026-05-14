@@ -106,10 +106,10 @@ Once running, visit:
 ## 🗺️ Roadmap
 
 - [x] **Phase 1:** Foundation & Data Modeling
-- [ ] **Phase 2:** Knowledge Base & RAG (ChromaDB + Ollama)
-- [ ] **Phase 3:** Multi-Agent System (LangGraph)
-- [ ] **Phase 4:** Document Verification Agent (Tesseract + Vision LLM)
-- [ ] **Phase 5:** Polish, Analytics, and Deployment
+- [x] **Phase 2:** Knowledge Base & RAG (ChromaDB + Ollama)
+- [x] **Phase 3:** Multi-Agent System (LangGraph)
+- [x] **Phase 4:** Document Verification Agent (Tesseract + Vision LLM)
+- [x] **Phase 5:** Polish, Analytics, and Deployment
 
 ## 🛠️ Tech Stack
 
@@ -122,3 +122,26 @@ Once running, visit:
 | AI Agents | LangGraph + Ollama |
 | Vector DB | ChromaDB |
 | OCR | Tesseract |
+
+## 🐳 Deployment (Docker)
+
+To deploy the entire stack locally with Docker Compose:
+
+1. Make sure you have Docker Desktop installed and running.
+2. Ensure you have Ollama running locally (or adjust the `docker-compose.yml` `OLLAMA_BASE_URL` to point to your remote Ollama).
+3. Run the following command from the root directory:
+
+```bash
+docker-compose up --build -d
+```
+
+Services will be exposed as follows:
+- **Frontend Dashboard:** http://localhost:3000
+- **Backend API:** http://localhost:8080
+- **ChromaDB:** http://localhost:8000
+- **PostgreSQL:** `localhost:5432`
+
+Stop the services using:
+```bash
+docker-compose down
+```

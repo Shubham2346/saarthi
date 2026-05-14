@@ -31,6 +31,12 @@ async def list_users(
     return [UserRead.model_validate(u) for u in users]
 
 
+@router.get("/me", response_model=UserRead)
+async def get_my_profile(current_user: User = Depends(get_current_user)):
+    """Get the current user's profile."""
+    return UserRead.model_validate(current_user)
+
+
 @router.get("/{user_id}", response_model=UserRead)
 async def get_user(
     user_id: str,
@@ -67,9 +73,9 @@ async def update_my_profile(
 
     update_data = update.model_dump(exclude_unset=True)
 
-    # Students cannot change their own role
-    if current_user.role == "student" and "role" in update_data:
-        del update_data["role"]
+    # For demo purposes, allow users to change their own role
+    # if current_user.role == "student" and "role" in update_data:
+    #     del update_data["role"]
 
     for key, value in update_data.items():
         setattr(current_user, key, value)

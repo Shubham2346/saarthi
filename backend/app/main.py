@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import init_db, close_db
-from app.routers import auth, users, tasks, documents, tickets, chat, knowledge
+from app.routers import auth, users, tasks, documents, tickets, chat, knowledge, analytics, mentors
 
 settings = get_settings()
 
@@ -64,6 +64,8 @@ app.include_router(documents.router, prefix="/api/v1")
 app.include_router(tickets.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(knowledge.router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
+app.include_router(mentors.router, prefix="/api/v1")
 
 
 # --- Health Check ---

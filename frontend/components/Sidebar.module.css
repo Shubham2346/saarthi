@@ -133,10 +133,34 @@
 }
 
 .userRole {
-  display: block;
   font-size: 11px;
   color: var(--text-muted);
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.roleSwitcher {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.roleSelect {
+  width: 100%;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+.roleSelect:hover {
+  border-color: var(--text-muted);
+}
+.roleSelect:focus {
+  border-color: var(--accent);
 }
 
 .logoutBtn {

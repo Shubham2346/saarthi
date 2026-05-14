@@ -54,11 +54,23 @@ async def get_current_user(
     return user
 
 
+async def require_system_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Dependency that ensures the current user is a system admin."""
+    if current_user.role != UserRole.SYSTEM_ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="System Admin access required",
+        )
+    return current_user
+
+
 async def require_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Dependency that ensures the current user is an admin."""
-    if current_user.role != UserRole.ADMIN:
+    """Dependency that ensures the current user is an admin or system admin."""
+    if current_user.role not in (UserRole.ADMIN, UserRole.SYSTEM_ADMIN):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
@@ -69,10 +81,11 @@ async def require_admin(
 async def require_admin_or_mentor(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Dependency that ensures the current user is an admin or mentor."""
-    if current_user.role not in (UserRole.ADMIN, UserRole.MENTOR):
+    """Dependency that ensures the current user is an admin, mentor, or system admin."""
+    if current_user.role not in (UserRole.ADMIN, UserRole.MENTOR, UserRole.SYSTEM_ADMIN):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin or Mentor access required",
         )
     return current_user
+
