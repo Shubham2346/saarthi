@@ -1,0 +1,150 @@
+# Docker Compose for Local Development & Testing
+# Orchestrates Backend, Frontend, Database, Vector DB, and Ollama
+
+version: '3.9'
+
+services:
+  # =========================================================================
+  # OLLAMA - LLM Engine
+  # =========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: saarthi-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - saarthi-network
+
+  # =========================================================================
+  # POSTGRESQL - Main Database
+  # =========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: saarthi-postgres
+    environment:
+      POSTGRES_DB: saarthi_db
+      POSTGRES_USER: saarthi_user
+      POSTGRES_PASSWORD: saarthi_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saarthi_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saarthi-network
+
+  # =========================================================================
+  # REDIS - Caching & Sessions
+  # =========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: saarthi-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - saarthi-network
+
+  # =========================================================================
+  # BACKEND - FastAPI Application
+  # =========================================================================
+  backend:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+    container_name: saarthi-backend
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      DEBUG: "true"
+      DATABASE_URL: postgresql+asyncpg://saarthi_user:saarthi_password@postgres:5432/saarthi_db
+      REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://ollama:11434
+      FRONTEND_URL: http://localhost:3000
+    volumes:
+      - ../../:/app
+      - ./logs:/app/logs
+      - ./storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - saarthi-network
+    command: >
+      sh -c "uvicorn app.main:app 
+             --host 0.0.0.0 
+             --port 8000 
+             --reload"
+
+  # =========================================================================
+  # FRONTEND - Next.js Application
+  # =========================================================================
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: saarthi-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    volumes:
+      - ../../frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - saarthi-network
+    command: npm run dev
+
+  # =========================================================================
+  # QDRANT - Vector Database (Optional, for production)
+  # =========================================================================
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: saarthi-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT_INITIAL_COLLECTION_CONFIG: '{}'
+    networks:
+      - saarthi-network
+    profiles: ["production"]  # Only start with: docker-compose --profile production up
+
+networks:
+  saarthi-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+  qdrant_data:
+    driver: local

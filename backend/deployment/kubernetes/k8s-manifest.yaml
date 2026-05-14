@@ -1,0 +1,417 @@
+---
+# Kubernetes Deployment for Smart Student Onboarding Agent
+# Production-Ready Configuration for Institutional Deployment
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: saarthi
+
+---
+# ConfigMap for Application Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: saarthi-config
+  namespace: saarthi
+data:
+  APP_ENV: production
+  DEBUG: "false"
+  OLLAMA_BASE_URL: "http://ollama-service:11434"
+  REDIS_URL: "redis://redis-service:6379"
+  VECTOR_DB_TYPE: "qdrant"
+
+---
+# Secret for Sensitive Data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: saarthi-secrets
+  namespace: saarthi
+type: Opaque
+stringData:
+  JWT_SECRET_KEY: "your-super-secret-key-change-this"
+  DATABASE_URL: "postgresql+asyncpg://saarthi_user:your_password@postgres-service:5432/saarthi_db"
+  GOOGLE_CLIENT_ID: "your-google-client-id"
+  GOOGLE_CLIENT_SECRET: "your-google-client-secret"
+
+---
+# PersistentVolume for Database
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: saarthi
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  hostPath:
+    path: "/mnt/postgres-data"
+
+---
+# PersistentVolume for Uploads
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: uploads-pv
+  namespace: saarthi
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard
+  hostPath:
+    path: "/mnt/uploads"
+
+---
+# PersistentVolume for Vector DB
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: vector-db-pv
+  namespace: saarthi
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  hostPath:
+    path: "/mnt/vector-db"
+
+---
+# PersistentVolumeClaim for Database
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: saarthi
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  volumeName: postgres-pv
+
+---
+# PersistentVolumeClaim for Uploads
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+  namespace: saarthi
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi
+  volumeName: uploads-pv
+
+---
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: saarthi
+spec:
+  serviceName: postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: saarthi_db
+        - name: POSTGRES_USER
+          value: saarthi_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: saarthi-secrets
+              key: DATABASE_URL
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+
+---
+# Service for PostgreSQL
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: saarthi
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: saarthi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+# Service for Redis
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: saarthi
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# Ollama StatefulSet (GPU Node Affinity)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ollama
+  namespace: saarthi
+spec:
+  serviceName: ollama-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: accelerator
+                operator: In
+                values:
+                - nvidia-tesla-v100
+                - nvidia-tesla-t4
+                - nvidia-tesla-a100
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        ports:
+        - containerPort: 11434
+        env:
+        - name: OLLAMA_HOST
+          value: "0.0.0.0:11434"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: ollama-models
+          mountPath: /root/.ollama
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: ollama-models
+        emptyDir: {}
+
+---
+# Service for Ollama
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-service
+  namespace: saarthi
+spec:
+  clusterIP: None
+  selector:
+    app: ollama
+  ports:
+  - port: 11434
+    targetPort: 11434
+
+---
+# Backend Deployment (FastAPI)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: saarthi
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: saarthi/backend:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: saarthi-config
+        - secretRef:
+            name: saarthi-secrets
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/storage/uploads
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: uploads-pvc
+      - name: logs
+        emptyDir: {}
+
+---
+# Service for Backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: saarthi
+spec:
+  type: LoadBalancer
+  selector:
+    app: backend
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+
+---
+# Horizontal Pod Autoscaler for Backend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: saarthi
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# NetworkPolicy for Security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: saarthi-network-policy
+  namespace: saarthi
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000

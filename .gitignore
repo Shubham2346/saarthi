@@ -1,0 +1,37 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/
+
+# Vector DB
+chroma_data/
+
+# Node modules (frontend)
+node_modules/
+.next/
+
+# Distribution
+dist/
+build/
+*.egg-info/

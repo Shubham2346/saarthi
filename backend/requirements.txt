@@ -1,0 +1,88 @@
+# ============================================================================
+# SMART STUDENT ONBOARDING AGENT - COMPREHENSIVE REQUIREMENTS
+# Production-Grade Multi-Agent System with LangGraph & Ollama
+# ============================================================================
+
+# === CORE FRAMEWORK ===
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.9
+starlette==0.38.0
+
+# === DATABASE & ORM (SQLModel) ===
+sqlmodel==0.0.22
+# Pin SQLAlchemy for SQLModel 0.0.22 compat (2.0.23+ breaks default_factory)
+sqlalchemy==2.0.22
+alembic==1.14.0
+asyncpg==0.31.0
+psycopg2-binary==2.9.12
+
+# === AUTHENTICATION & SECURITY ===
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
+pydantic-settings==2.5.2
+# Pin pydantic <2.9 for SQLModel 0.0.22 compat (2.9+ breaks default_factory)
+pydantic[email]==2.8.2
+google-auth==2.32.0
+google-auth-httplib2==0.2.0
+cryptography==44.0.0
+
+# === PHASE 3: MULTI-AGENT ORCHESTRATION (LangGraph) ===
+langchain==0.3.0
+langchain-community==0.3.0
+langchain-ollama==0.2.0
+langgraph==0.2.76
+langchain-core==0.3.30
+
+# === PHASE 2: VECTOR DATABASE & RAG ===
+# 0.5.x pulls chroma-hnswlib, which has no cp312 win_amd64 wheel (needs MSVC). 1.5+ installs cleanly on Windows.
+chromadb>=1.5.0,<2
+# Optional: only if you add Qdrant-backed stores (not used by Saarthi core; ChromaDB is default).
+# qdrant-client>=1.14.3,<2
+
+# === LLM & EMBEDDINGS ===
+ollama==0.3.0
+tiktoken==0.7.0
+
+# === PHASE 4: OCR & DOCUMENT PROCESSING ===
+pytesseract==0.3.13
+opencv-python==4.11.0.86
+pillow==10.4.0
+pdf2image==1.16.3
+PyPDF2==3.0.1
+
+# === FILE STORAGE & UPLOAD ===
+aiofiles==24.1.0
+boto3==1.37.0
+python-dotenv==1.0.1
+
+# === HTTP & API ===
+requests==2.32.3
+httpx==0.27.2
+
+# === CACHING & SESSIONS ===
+redis==5.2.0
+cachetools==5.5.0
+
+# === LOGGING & MONITORING ===
+python-json-logger==2.0.7
+sentry-sdk==2.14.0
+structlog==24.4.0
+
+# === DATA PROCESSING ===
+numpy==1.26.4
+pandas==2.2.3
+
+# === TESTING & DEVELOPMENT ===
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-cov==5.0.0
+black==24.10.0
+flake8==7.1.1
+mypy==1.14.1
+ruff==0.8.2
+faker==26.0.0
+
+# === DEPLOYMENT & CONTAINERIZATION ===
+gunicorn==23.0.0

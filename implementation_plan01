@@ -1,0 +1,134 @@
+# Smart Student Onboarding Agent: Master Implementation & Deployment Plan
+
+This document outlines the comprehensive system architecture, specifically focusing on the integration of a **Multi-Agent System (MAS)** using **Ollama** and **LangGraph**, while detailing the exact technology stack, deployment strategies, and rollout phases for testing with real students during the college admission process.
+
+---
+
+## 1. System Architecture Overview
+
+The system will follow a modern decoupled architecture:
+*   **Frontend (Client Layer):** A web portal for Students, Admins, and Mentors built with Next.js.
+*   **Backend (API Layer):** A robust REST API to handle business logic, file uploads, and database transactions built with FastAPI.
+*   **Agentic Layer (AI Core):** A state-driven network of specialized AI agents working together to assist the student, orchestrated via LangGraph.
+*   **Data Layer:** Relational Database for structured data (users, tasks, tickets) and a Vector Database for semantic search (FAQs, knowledge base).
+*   **LLM Engine:** Ollama running open-weights models locally (e.g., Llama 3, Mistral) for privacy and cost control.
+
+### Technology Stack Evaluation & Decisions
+
+| Component | Final Choice & Rationale |
+| :--- | :--- |
+| **Agent Framework** | **LangGraph:** Perfect for onboarding. Onboarding requires strict state management (e.g., ensuring a student uploaded a document before letting them register for courses). LangGraph's state machines handle this beautifully. |
+| **Authentication** | **Google Auth + JWT:** Seamless for students. The frontend uses Google OAuth, and the backend verifies the token and issues a secure JWT for API session management. |
+| **ORM (Database)** | **SQLModel / SQLAlchemy (Python):** While Prisma is great for Node.js, LangGraph and AI tools run natively in Python. Using FastAPI + SQLModel gives you Prisma-like developer experience while keeping the entire backend unified in Python. |
+| **OCR (Vision)** | **Tesseract + Ollama Vision Fallback:** Tesseract is fast and free, acting as the primary parser. If it struggles with messy layouts, LangGraph will fall back to a Vision-Language Model (like `llama3.2-vision`) to extract text intelligently. |
+
+---
+
+## 2. Multi-Agent System (MAS) Design & LangGraph Flow
+
+Instead of a single monolithic prompt, the system uses multiple specialized agents. This improves accuracy, reduces context window bloat, and allows for specialized tooling per agent. Using LangGraph, the system will operate as a **State Graph**.
+
+### The Agent Hierarchy (LangGraph Nodes)
+
+1.  **Supervisor / Router Agent (Entry Node)**
+    *   **Role:** Analyzes the student's input and determines which specialized agent should handle the request.
+    *   **Tools:** Route to sub-agents, fetch basic user session info.
+2.  **Onboarding Task Agent**
+    *   **Role:** Manages the student's checklist based on database state.
+    *   **Tools:** `get_pending_tasks`, `update_task_status`, `get_deadlines`.
+    *   **Scenario:** "What do I need to do next?" -> Queries DB -> "You need to upload your 10th marksheet by Friday."
+3.  **Document Verification Agent**
+    *   **Role:** Assists with document handling and pre-screening.
+    *   **Flow:** Triggered on file upload -> Runs Tesseract OCR -> Passes text to LLM -> Updates database to "Pending Admin Approval" or "Rejected (Blurry)".
+4.  **Knowledge Base / FAQ Agent (RAG Node)**
+    *   **Role:** Answers generic questions about hostel, timetable, LMS, and fees by querying the Vector Database.
+    *   **Tools:** `search_vector_db`.
+5.  **Support / Escalation Agent**
+    *   **Role:** Monitors conversation sentiment. If the router detects repeated failures, it triggers this node to create a manual support ticket for admins.
+    *   **Tools:** `create_support_ticket`, `assign_to_department`.
+
+---
+
+## 3. Comprehensive Technology Stack Summary
+
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React (Next.js) + TailwindCSS |
+| **Backend API** | FastAPI (Python) + SQLModel |
+| **Agent Framework** | LangGraph |
+| **LLM Provider** | Ollama (Llama 3 for text, Llama 3.2-Vision for documents) |
+| **Authentication** | Google OAuth + custom JWT |
+| **Database (Relational)** | PostgreSQL |
+| **Database (Vector)** | ChromaDB or Qdrant |
+| **OCR** | Tesseract |
+
+---
+
+## 4. System Implementation Phases
+
+### Phase 1: Foundation & Data Modeling (Non-AI)
+*   Setup Next.js Frontend and FastAPI Backend.
+*   Design and implement PostgreSQL database schema using SQLModel (Users, Tasks, Documents, Tickets).
+*   Implement Google Auth & JWT Authentication.
+*   Build simple CRUD APIs for the Onboarding Checklist and Admin Dashboard.
+
+### Phase 2: Knowledge Base & RAG Setup
+*   Setup ChromaDB/Qdrant.
+*   Ingest college FAQs, hostel rules, and LMS guides into the Vector Database using Ollama embeddings.
+*   Create a basic Chat Endpoint that queries this Vector DB.
+
+### Phase 3: Multi-Agent Orchestration
+*   Integrate LangGraph in the FastAPI backend.
+*   Build the state graph and specialized agents (Task Agent, FAQ Agent, Routing Agent).
+*   Give agents access to backend API functions (Tools).
+*   Connect the Frontend Chat UI to this orchestrated backend.
+
+### Phase 4: Workflows & Escalation
+*   Implement Document Upload workflows with Tesseract and the Document Verification Agent.
+*   Build the Escalation Agent to track unresolved queries and generate Helpdesk Tickets.
+
+### Phase 5: Polish & Admin Tooling
+*   Finalize Admin Dashboard analytics (completion rates, pending verifications).
+*   UI/UX polish (glassmorphism, modern design aesthetics).
+
+---
+
+## 5. Deployment Strategy for Real Users
+
+To test this on real students during admissions, you cannot run this strictly on your personal laptop. You require a robust deployment architecture:
+
+### Option A: The Cloud GPU Server (Recommended for Self-Hosted Ollama)
+*   **Infrastructure:** Rent a Cloud GPU VM. Providers like **RunPod**, **DigitalOcean (GPU Droplets)**, or **AWS EC2 (g4dn.xlarge)**.
+*   **Setup:**
+    1. Install Docker, Ollama, and your FastAPI backend on this GPU VM.
+    2. Run Ollama serving `llama3:8b`.
+    3. Expose your FastAPI securely using Nginx and SSL (Let's Encrypt).
+*   **Cost:** Only incur costs while the server is running during the admission period.
+
+### Option B: The "Serverless API" Fallback
+*   If setting up a GPU server is too complex, temporarily use an API like **Groq** or **Together AI** for the test period. They serve the exact same open-source Llama models instantly and cheaply, behaving identically to Ollama in code but requiring zero hardware setup.
+
+### Frontend & Database Hosting
+*   **Frontend:** Host Next.js on **Vercel** (Free, automatically scales).
+*   **Database:** Use a managed PostgreSQL database like **Neon**, **Supabase**, or **Render** (Free tiers available and easily integrated).
+
+---
+
+## 6. Step-by-Step Testing & Rollout Guide
+
+Follow this plan to ensure a smooth experience for real students without overwhelming the system:
+
+### Phase 1: Local Development & "Wizard of Oz" Testing
+1.  Build the backend (FastAPI, LangGraph) and connect to local Ollama.
+2.  **Alpha Test:** Have 5 friends use the system. Monitor the LangGraph logs locally to see where the router makes mistakes and adjust the prompts.
+
+### Phase 2: Staging Deployment
+1.  Deploy the Database, Frontend to Vercel, and Backend to your Cloud GPU instance.
+2.  **Beta Test:** Have the administrative staff test the system. Let them upload fake documents and ask tricky questions. Refine the FAQ Vector Database based on their inputs.
+
+### Phase 3: Soft Launch (Real Users)
+1.  During the first week of admissions, provide a link to the "AI Onboarding Assistant" as an *optional* tool alongside the traditional method.
+2.  **Monitor Escalations:** Watch the admin dashboard closely. If the AI hallucinates, the Escalation Node should flag it so a human admin can intervene.
+
+### Phase 4: Full Integration
+Once the system proves it can handle 80% of routine queries and document checks without admin intervention, integrate it fully as the primary onboarding portal for the college.
